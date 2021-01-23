@@ -12,7 +12,7 @@ namespace RuVdsTest.Database.Models
         /// Идентификатор виртуального серве
         /// </summary>
         [Key]
-        public long VirtualServerId { get; set; }
+        public int VirtualServerId { get; set; }
 
         /// <summary>
         /// Дата и время создания сервера
@@ -22,7 +22,7 @@ namespace RuVdsTest.Database.Models
         /// <summary>
         /// Дата и время удаления сервера
         /// </summary>
-        public DateTime RemoveDateTime { get; set; }
+        public DateTime? RemoveDateTime { get; set; }
 
         public VirtualServerModel()
         {
