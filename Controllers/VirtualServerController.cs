@@ -1,26 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using RuVdsTest.Database.Contexts;
-using RuVdsTest.Database.Models;
-using System;
+using RuVdsTest.Facades;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RuVdsTest.Controllers
 {
+    /// <summary>
+    /// Контроллер для работы с виртуальными серверами
+    /// </summary>
     [ApiController]
     [Route("/api/v1/virtualServer")]
     public class VirtualServerController : ControllerBase
     {
-        private readonly ApplicationContext _context;
-        private readonly ILogger<VirtualServerController> _logger;
+        private readonly VirtualServersFacade _facade;
 
-        public VirtualServerController(ApplicationContext context, ILogger<VirtualServerController> logger)
+        public VirtualServerController(VirtualServersFacade facade)
         {
-            _context = context;
-            _logger = logger;
+            _facade = facade;
         }
 
         /// <summary>
@@ -29,52 +25,35 @@ namespace RuVdsTest.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllVirtualServerAsync() 
         {
-            try
-            {
-                return new OkObjectResult(await _context.VirtualServers.ToListAsync());
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError(ex.StackTrace);
-                return BadRequest();
-            }            
+            var res = await _facade.GetAllVirtualServerAsync();
+            if (res.Success)
+                return new OkObjectResult(res.Value);
+            return BadRequest();
         }
 
+        /// <summary>
+        /// Добавить виртуальный сервер
+        /// </summary>  
         [HttpPost]
         public async Task<IActionResult> AddVirtualServerAsycn()
         {
-            var virtualServer = new VirtualServerModel();
-            _context.VirtualServers.Add(virtualServer);            
-            try
-            {
-                await _context.SaveChangesAsync();
-                return new OkObjectResult(virtualServer);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.StackTrace);
-                return BadRequest();
-            }            
+            var res = await _facade.AddVirtualServerAsync();
+            if (res.Success)
+                return new OkObjectResult(res.Value);
+            return BadRequest();
         }
 
+        /// <summary>
+        /// Удалить виртуальные сервера
+        /// </summary>
+        /// <param name="ids">Список идентификаторов серверов</param> 
         [HttpDelete]
         public async Task<IActionResult> DeleteVirtualServerAsync([FromBody] List<int> ids)
         {
-            var virtualServers = new List<VirtualServerModel>();
-            try
-            {
-                virtualServers = await _context.VirtualServers
-                    .Where(x => ids.Contains(x.VirtualServerId))
-                    .ToListAsync();
-                virtualServers.ForEach(x => x.RemoveDateTime = DateTime.UtcNow);
-                await _context.SaveChangesAsync();
-                return new OkObjectResult(virtualServers);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.StackTrace);
-                return BadRequest();
-            }
+            var res = await _facade.DeleteVirtualServerAsync(ids);
+            if (res.Success)
+                return new OkObjectResult(res.Value);
+            return BadRequest();
         }
     }
 }

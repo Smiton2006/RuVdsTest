@@ -9,7 +9,7 @@ namespace RuVdsTest.Database.Models
     public class VirtualServerModel
     {
         /// <summary>
-        /// Идентификатор виртуального серве
+        /// Идентификатор виртуального сервера
         /// </summary>
         [Key]
         public int VirtualServerId { get; set; }
@@ -24,6 +24,9 @@ namespace RuVdsTest.Database.Models
         /// </summary>
         public DateTime? RemoveDateTime { get; set; }
 
+        /// <summary>
+        /// .ctor
+        /// </summary>
         public VirtualServerModel()
         {
             CreateDateTime = DateTime.UtcNow;
