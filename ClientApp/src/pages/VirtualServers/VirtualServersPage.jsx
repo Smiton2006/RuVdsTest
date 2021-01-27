@@ -57,8 +57,39 @@ export function VirtualServersPage() {
         setVirtualServers(virtualServers);        
     }
 
+    const updateServersInfoV2 = async () => {
+        const virtualServers = await getAllVirtualServers();
+        let totaltime = 0;
+        let periods = [];
+        var orderedVirtualServes = virtualServers.sort((a, b) => new Date(a.createDateTime).getTime() - new Date(b.createDateTime).getTime())
+        periods.push([new Date(orderedVirtualServes[0].createDateTime).getTime(), new Date(orderedVirtualServes[0].removeDateTime).getTime()])
+        let currPeiod = 0
+        for (let server of orderedVirtualServes) {
+            if (new Date(server.removeDateTime).getTime() === 0) {
+                periods.push([new Date(server.createDateTime).getTime(), getCurentUtcDateTime()])
+                break;
+            }
+
+            if (new Date(server.createDateTime).getTime() >= periods[currPeiod][1]) {
+                periods.push([new Date(server.createDateTime).getTime(), new Date(server.removeDateTime).getTime()])
+                continue;
+            }
+
+            if (new Date(server.removeDateTime).getTime() > periods[currPeiod][1]) {
+                periods[currPeiod][1] = new Date(server.removeDateTime).getTime()
+            }            
+        }
+
+        for (let period of periods) {
+            totaltime += (period[1] - period[0])
+        }
+
+        setTotalUsageTime(secToTime(totaltime / 1000));
+        setVirtualServers(virtualServers);
+    }
+
     const updatePageContent = async () => {
-        await updateServersInfo();
+        await updateServersInfoV2();
         setCurrentTime(getCurentUtcDateTimeString())
     }
 
