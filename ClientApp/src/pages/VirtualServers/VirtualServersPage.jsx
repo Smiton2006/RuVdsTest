@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './VirtualPageStyle.css'
 import { getCurentUtcDateTime, getCurentUtcDateTimeString, secToTime } from '../../utils/DateTimeUtils'
 import { VirtualPageTable } from './VirtualServersTable'
+import { Period } from './Period'
 
 /** Страница с информацией по вирутальным серверам */
 export function VirtualServersPage() {
@@ -38,58 +39,67 @@ export function VirtualServersPage() {
 
     const updateServersInfo = async () => {
         const virtualServers = await getAllVirtualServers();
-        let totaltime = 0;
-        for (let server of virtualServers) {            
-            
-            if (server.removeDateTime) {
-                totaltime += (new Date(server.removeDateTime).getTime() - new Date(server.createDateTime).getTime());
-                server.removeDateTime = new Date(server.removeDateTime).toLocaleString('ru-RU').replace(',', '');
-            }
-            else {
-                totaltime += (getCurentUtcDateTime().getTime() - new Date(server.createDateTime).getTime());
-            }
-            server.createDateTime = new Date(server.createDateTime).toLocaleString('ru-RU').replace(',', '');
+        
+        for (let server of virtualServers) {     
+            server.removeDateTime = new Date(server.removeDateTime).getTime()
+            server.createDateTime = new Date(server.createDateTime).getTime()
             const remove = !!server.removeDateTime;
             server.remove = remove;
-            server.disable = remove;
+            server.disable = remove;            
+            
         }
-        setTotalUsageTime(secToTime(totaltime/1000));
+        const totalTime = getTotalTime(virtualServers);
+        setTotalUsageTime(secToTime(totalTime/1000));
         setVirtualServers(virtualServers);        
     }
 
-    const updateServersInfoV2 = async () => {
-        const virtualServers = await getAllVirtualServers();
+    const getTotalTime = (servers) => {
         let totaltime = 0;
-        let periods = [];
-        var orderedVirtualServes = virtualServers.sort((a, b) => new Date(a.createDateTime).getTime() - new Date(b.createDateTime).getTime())
-        periods.push([new Date(orderedVirtualServes[0].createDateTime).getTime(), new Date(orderedVirtualServes[0].removeDateTime).getTime()])
+        if (servers == null || servers.length === 0) {
+            return totaltime
+        }
+        
+        const periods = getPeriods(servers)
+
+        for (let period of periods) {
+            totaltime += (period.end - period.start)
+        }
+
+        return totaltime;
+    }
+
+    const getPeriods = (servers) => {
+        const periods = [];
         let currPeiod = 0
-        for (let server of orderedVirtualServes) {
-            if (new Date(server.removeDateTime).getTime() === 0) {
-                periods.push([new Date(server.createDateTime).getTime(), getCurentUtcDateTime()])
+        if (!servers[currPeiod].removeDateTime) {
+            periods.push(new Period(servers[currPeiod].createDateTime, getCurentUtcDateTime()))
+            return periods;
+        }
+
+        periods.push(new Period(servers[currPeiod].createDateTime, servers[currPeiod].removeDateTime))
+        for (let server of servers) {
+            if (!server.removeDateTime) {
+                const period = new Period(server.createDateTime, getCurentUtcDateTime())
+                periods.push(period)
                 break;
             }
 
-            if (new Date(server.createDateTime).getTime() >= periods[currPeiod][1]) {
-                periods.push([new Date(server.createDateTime).getTime(), new Date(server.removeDateTime).getTime()])
+            if (server.createDateTime >= periods[currPeiod].end) {
+                const period = new Period(server.createDateTime, server.removeDateTime)
+                periods.push(period)
+                currPeiod += 1;
                 continue;
             }
 
-            if (new Date(server.removeDateTime).getTime() > periods[currPeiod][1]) {
-                periods[currPeiod][1] = new Date(server.removeDateTime).getTime()
-            }            
+            if (server.removeDateTime > periods[currPeiod].end) {
+                periods[currPeiod].end = server.removeDateTime
+            }
         }
-
-        for (let period of periods) {
-            totaltime += (period[1] - period[0])
-        }
-
-        setTotalUsageTime(secToTime(totaltime / 1000));
-        setVirtualServers(virtualServers);
+        return periods;
     }
 
     const updatePageContent = async () => {
-        await updateServersInfoV2();
+        await updateServersInfo();
         setCurrentTime(getCurentUtcDateTimeString())
     }
 

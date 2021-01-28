@@ -24,3 +24,10 @@ export const secToTime = (sec) => {
     if (seconds < 10) { seconds = "0" + seconds; }
     return `${hours}:${minutes}:${seconds}`;
 }
+
+export const formatDate = (date) => {
+    if (!date)
+        return '';
+
+    return new Date(date).toLocaleString('ru-RU').replace(',', '')
+}

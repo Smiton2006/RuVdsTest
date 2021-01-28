@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import SelectedForRemoveCheckbox from './SelectedForRemoveCheckbox'
+import { formatDate } from '../../utils/DateTimeUtils'
 
 class Props {
     /** 
@@ -43,7 +44,7 @@ export function VirtualPageTable({ virtualServers, onSelectServer, onUnselectSer
             <tbody>
                 <tr>
                     <td>CurrentDateTime:</td>
-                    <td>{currentTime}</td>
+                    <td>{formatDate(currentTime)}</td>
                     <td></td>
                     <td></td>
                 </tr>
@@ -62,8 +63,8 @@ export function VirtualPageTable({ virtualServers, onSelectServer, onUnselectSer
                 {virtualServers.map((server) =>
                     <tr key={server.virtualServerId}>
                         <td>{server.virtualServerId}</td>
-                        <td>{server.createDateTime}</td>
-                        <td>{server.removeDateTime}</td>
+                        <td>{formatDate(server.createDateTime)}</td>
+                        <td>{formatDate(server.removeDateTime)}</td>
                         <td> <SelectedForRemoveCheckbox
                             remove={server.remove}
                             disable={server.disable}
